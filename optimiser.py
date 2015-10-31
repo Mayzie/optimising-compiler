@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import re
+import deadCode
 
 #class Instruction:
 #    def __init__(self, type, data):
@@ -105,6 +106,7 @@ class CFG:
             cf = self.dfun.search(line)
             if cf is not None:
                 function = CFG_Function(cf.group(1), cf.group(2).split(' '))
+                self.functions.append(function)
 
             # Check if a new block is defined here
             cb = self.dbr.search(line)
@@ -137,6 +139,7 @@ if __name__ == "__main__":
             in_file = read_file(sys.argv[1])
             if len(in_file) != 0:
                 cfg = CFG(in_file)
+                deadCode.dce(cfg)
         else:
             print("Error: File '" + sys.argv[1] + "' does not exist.")
     else:
