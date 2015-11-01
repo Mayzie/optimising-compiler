@@ -3,6 +3,7 @@
 import re
 import deadCode
 import redundantLoads
+from itertools import zip_longest
 
 #class Instruction:
 #    def __init__(self, type, data):
@@ -71,11 +72,56 @@ class CFG_Block:
     def __repr__(self):
         return str(self.id) + "@" + str(self.parent)
 
+    def __str__(self):
+        operators = ["add", "sub", "mul", "div", "lt", "gt", "eq"]
+        sing_regs = ["lc", "ld", "br", "ret", "call"]
+        out = " " * 6 + "(" + str(self.id)
+        out_instr = []
+        for name, *args in self.instructions:
+            out_instr.append(" " * 4 + "(" + name + " ")
+            if name in operators:
+                args = ["r" + str(a) for a in args]
+            elif name in sing_regs:
+                args[0] = "r" + str(args[0])
+            elif name == "st":
+                args[1] = "r" + str(args[1])
+
+            if name == "call":
+                args[2] = ["r" + str(a) for a in args[2]]
+                out_instr[-1] += " ".join(map(str, args[0:2])) + " " + " ".join(args[2])
+            else:
+                out_instr[-1] += " ".join(map(str, args))
+
+            out_instr[-1] += ")"
+        out_instr = [out_instr[0]] + [" " * 8 + s for s in out_instr[1:]]
+        return out + "\n".join(out_instr) + " )"
+
+    def eq(self, other):
+        if other is None:
+            return False
+        if not self.id == other.id:
+            return False
+        if not (self.edges == other.edges or
+         self.in_edges == other.in_edges or 
+         self.out_edges == other.out_edges):
+            return False
+        for si, oi in zip_longest(self.instructions, other.instructions):
+            if si is None:
+                return False
+
+            if not si == oi:
+                return False
+        return True
+
+    def clone(self, parent):
+        ret = CFG_Block(self.id, parent)
+        ret.instructions = [i for i in self.instructions]
+
+        return ret
+
     def add_instruction(self, instruction):
         if instruction is not None:
             self.instructions.append(instruction)
-        else:
-            print("No instruction")
 
     def add_edge(self, edge, undirected=True):
         if edge is not None:
@@ -84,10 +130,6 @@ class CFG_Block:
             edge.in_edges.add(self)
             if undirected and self not in edge.edges:
                 edge.add_edge(self)
-
-    def pretty_print(self):
-        for instruction in self.instructions:
-            print(instruction)
 
     def connect(self):
         # Reset the sets
@@ -121,7 +163,6 @@ class CFG_Block:
 class CFG_Function:
     def __init__(self, name, arguments, parent):
         self.blocks = []     # Blocks of instructions that this function contains
-        self.functions = []  # Other functions this function calls
 
         self.name = name
         self.args = arguments
@@ -136,7 +177,43 @@ class CFG_Function:
         return self.name + "(" + ", ".join(self.args) + ")"
 
     def __str__(self):
-        return self.name
+        out = "(" + self.name + " (" + " ".join(self.args) + ")\n"
+        out_blocks = []
+        for b in self.blocks:
+            out_blocks.append(str(b))
+        out += "\n".join(out_blocks) + " )"
+        return out
+
+    def eq(self, other):
+        if other is None:
+            return False
+
+        if not self.name == other.name:
+            return False
+
+        if not self.args == other.args:
+            return False
+
+        if not (self.edges == other.edges or
+         self.in_edges == other.in_edges or
+         self.out_edges == other.out_edges):
+            return False
+
+        for sb, ob in zip_longest(self.blocks, other.blocks):
+            if sb is None:
+                return False
+
+            if not sb.eq(ob):
+                return False
+
+        return True
+
+    def clone(self, parent):
+        ret = CFG_Function(self.name, self.args, parent)
+        for b in self.blocks:
+            ret.add_block(b.clone(ret))
+        
+        return ret
 
     # Finds a block that matches id `id`, otherwise returns None
     def find(self, id):
@@ -149,19 +226,13 @@ class CFG_Function:
         if edge is not None:
             self.edges.add(edge)
             self.out_edges.add(edge)
-            edge.in_edges(self)
+            edge.in_edges.add(self)
             if undirected and self not in edge.edges:
                 edge.add_edge(self)
 
     def add_block(self, block):
         if block is not None:
             self.blocks.append(block)
-
-    def pretty_print(self):
-        print("(function '" + self.name + "' " + str(self.args) + "")
-        for block in self.blocks:
-            print("(block " + str(block.id))
-            block.pretty_print()
 
     def connect(self):
         # Reset the sets
@@ -204,16 +275,37 @@ class CFG:
         if ir is not None:
             self.parse(ir)
 
+    def __str__(self):
+        out = "("
+        out_funcs = []
+        for f in self.functions:
+            out_funcs.append(str(f))
+        out_funcs = [" " * 2 + out_funcs[0]] + [" " * 3 + s for s in out_funcs[1:]]
+        out += "\n".join(out_funcs) + " )"
+        return out
+
+    def eq(self, other):
+        for sf, of in zip_longest(self.functions, other.functions):
+            if sf is None:
+                return False
+            if not sf.eq(of):
+                return False
+        return True
+
+    def clone(self):
+        ret = CFG()
+        for f in self.functions:
+            ret.functions.append(f.clone(ret))
+
+        ret.connect()
+        return ret
+
     # Finds a function with name `name` in program, otherwise returns None
     def find(self, name):
         for f in self.functions:
             if f.name == name:
                 return f
         return None
-
-    def pretty_print(self):
-        for function in self.functions:
-            function.pretty_print()
 
     # Converts the list of strings, ir, into a CFG data structure
     def parse(self, ir):
@@ -279,12 +371,18 @@ if __name__ == "__main__":
         if os.path.isfile(sys.argv[1]):
             in_file = read_file(sys.argv[1])
             if len(in_file) != 0:
+                prev_cfg = CFG()
                 cfg = CFG(in_file)
                 cfg.connect()
-                # deadCode.dce(cfg)
-                # redundantLoads.rle(cfg)
-                cfg.unreachable_code()
-                cfg.pretty_print()
+                # Keep going until there are no more optimisations
+                while not cfg.eq(prev_cfg):
+                    prev_cfg = cfg.clone()
+
+                    cfg.unreachable_code()
+                    deadCode.dce(cfg)
+                    # redundantLoads.rle(cfg)
+
+                print(str(cfg))
         else:
             print("Error: File '" + sys.argv[1] + "' does not exist.")
     else:
