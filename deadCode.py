@@ -49,7 +49,7 @@ def dce_instruction(instr, registers):
     elif instr[0] == "call":
         registers |= {instr[3:]}
 
-    # Rule 3 - If being assigned and x is not being used/read
+    # Rule 3 - If being assigned and register is not being used/read
     # Instructions: lc, ld, and maybe add, sub, mul, div, lt, gt, eq, call
     # Register becomes dead (make sure that register is not used/read as well)
     if instr[0] == "lc":
