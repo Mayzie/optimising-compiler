@@ -13,15 +13,22 @@ def rle_function(function):
     visited = set()
 
     queue = deque([function.blocks[0]])
-    envMap = {function.blocks[0]: [[]]}
+    envMap = {function.blocks[0]: [set()]}
 
     while queue:
         block = queue.popleft()
         envList = envMap[block]
 
-        # Calculate union of envList
+        # TODO: Make sure the block has all the envs it needs
 
-        env = rle_block(block, env, visited)
+        # TODO: Calculate intersect of envList
+        env = envList[0]
+        for newEnv in envList:
+            env &= newEnv
+
+        visited.add(block)
+
+        env = rle_block(block, env)
 
         for b in block.blocks:
             if b not in visited:
@@ -31,9 +38,9 @@ def rle_function(function):
 
 def rle_block(block, env, blocks):
     # Make sure this block hasn't been checked before
-    if block in blocks:
-        pass
-    blocks |= {block}
+    #if block in blocks:
+    #    pass
+    #blocks |= {block}
 
     # Go through instructions
     for instr in block.instructions:
@@ -44,9 +51,9 @@ def rle_block(block, env, blocks):
     # Optimise each of the linked blocks
     # TODO: Move to rle_function() and use a BFS
     # TODO: Also Union all the env whenever multiple blocks link to one
-    for linkedBlock in block.blocks:
-        envCopy = copy.deepcopy(env)
-        rle_block(linkedBlock, envCopy, blocks)
+    #for linkedBlock in block.blocks:
+    #    envCopy = copy.deepcopy(env)
+    #    rle_block(linkedBlock, envCopy, blocks)
 
 def rle_instruction(instr, env):
     # Used to group instructions together and make if statements simpler
