@@ -4,21 +4,25 @@ def dce(cfg):
 
 def dce_function(function):
     # Start from the first block
-    dce_block(function.blocks[0])
+    dce_block(function.blocks[0], set())
 
-def dce_block(block):
+def dce_block(block, blocks):
     # Stores the live registers throughout the block
     registers = set()
 
+    # Make sure this block hasn't been checked before
+    if block in blocks:
+        return registers
+    blocks |= {block}
+
     # Get the union of the registers (Rule 1)
     for linkedBlock in block.blocks:
-        registers |= dce_block(linkedBlock)
+        registers |= dce_block(linkedBlock, blocks)
 
     # Go through instructions in reverse order
     for instr in block.instructions[::-1]:
         remove = dce_instruction(instr, registers)
         # Remove any instruction if needed
-        # TODO: Maybe a bug if some instructions are the same?
         if remove:
             block.instructions.remove(instr)
 
