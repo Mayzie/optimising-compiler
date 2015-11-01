@@ -18,7 +18,7 @@ def rle_block(block, env, blocks):
 
     # Optimise each of the linked blocks
     for linkedBlock in block.blocks:
-        rle_block(linkedBlock, env)
+        rle_block(linkedBlock, env, blocks)
 
 def rle_instruction(instr, env):
     # Used to group instructions together and make if statements simpler
@@ -28,9 +28,9 @@ def rle_instruction(instr, env):
     # Instructions - lc, ld
     # Register is added to env with links to registers of same value
     if instr[0] == "lc":
-        pass
+        addToEnv(instr[1], instr[2], env)
     elif instr[0] == "ld":
-        pass
+        addToEnv(instr[1], instr[2], env)
 
     # Rule 2 - If being used/read
     # Instructions - st, add, sub, mul, div, lt, gt, eq, br, ret, call
@@ -47,9 +47,21 @@ def rle_instruction(instr, env):
         pass
 
     # Rule 3 - If being assigned (not loads)
-    # Instructions - add, sub, mul, div, lt, gt, eq, call
-    # Remove any elements referencing the register
-    if instr[0] in instrGroup:
-        pass
+    # Instructions - st, add, sub, mul, div, lt, gt, eq, call
+    # Remove any elements in env referencing the register/variable
+    if instr[0] == "st":
+        removeFromEnv(instr[1], env)
+    elif instr[0] in instrGroup:
+        removeFromEnv(instr[1], env)
     elif instr[0] == "call":
-        pass
+        removeFromEnv(instr[1], env)
+
+    print("Env", env)
+
+def removeFromEnv(x, env):
+    pass
+
+def addToEnv(reg, value, env):
+    reg = "r" + str(reg)
+    [env.append((reg, e[0])) for e in env if value in e]
+    env.append((reg, value))
