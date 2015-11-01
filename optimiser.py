@@ -214,8 +214,8 @@ if __name__ == "__main__":
             if len(in_file) != 0:
                 cfg = CFG(in_file)
                 cfg.connect()
-                #deadCode.dce(cfg)
-                redundantLoads.rle(cfg)
+                deadCode.dce(cfg)
+                #redundantLoads.rle(cfg)
                 cfg.prettyPrint()
         else:
             print("Error: File '" + sys.argv[1] + "' does not exist.")
