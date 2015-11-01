@@ -216,7 +216,7 @@ if __name__ == "__main__":
                 cfg.connect()
                 deadCode.dce(cfg)
                 #redundantLoads.rle(cfg)
-                cfg.prettyPrint()
+                cfg.pretty_print()
         else:
             print("Error: File '" + sys.argv[1] + "' does not exist.")
     else:

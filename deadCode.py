@@ -16,7 +16,7 @@ def dce_block(block, blocks):
     blocks |= {block}
 
     # Get the union of the registers (Rule 1)
-    for linkedBlock in block.blocks:
+    for linkedBlock in block.edges:
         registers |= dce_block(linkedBlock, blocks)
 
     # Go through instructions in reverse order
