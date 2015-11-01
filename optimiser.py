@@ -43,9 +43,11 @@ def parse_instruction(name, re):
 
 # Contains a list of instructions
 class CFG_Block:
-    def __init__(self, id):
+    def __init__(self, id, parent):
         self.instructions = []  # Instructions this block contains
         self.id = id
+        self.parent = parent
+        self.edges = set()
         self.blocks = [] # Other blocks this block branches to
 
     def add_instruction(self, instruction):
@@ -54,71 +56,71 @@ class CFG_Block:
         else:
             print("No instruction")
 
-    def add_block_link(self, block):
-        if block is not None:
-            self.blocks.append(block)
+    def add_edge(self, edge, undirected=True):
+        if edge is not None:
+            self.edges.add(edge)
+            if undirected and edge not in self.edges:
+                edge.add_edge(self)
 
-    def prettyPrint(self):
+    def pretty_print(self):
         for instruction in self.instructions:
             print(instruction)
 
-    # Returns the block ids that this block links to
     def connect(self):
-        functionNames = []
-        blockIds = []
+        # Reset the sets
+        self.edges = set()
 
-        for instruction in self.instructions:
-            # Stores the linked function names
-            if instruction[0] == "call":
-                functionNames.append(instruction[2])
-            # Stores the linked block ids
-            elif instruction[0] == "br":
-                blockIds.append(instruction[2])
-                blockIds.append(instruction[3])
+        p = self.parent
 
-        # TODO: Maybe if there is no branch or return, and it's not the last block, then add the next block number?
-
-        return (functionNames, blockIds)
+        for name, *args in self.instructions:
+            if name == "call":
+                p.add_edge(p.parent.find(args[1]))  # Add an edge to the parent function
+            elif name == "br":
+                self.add_edge(p.find(args[1]))
+                self.add_edge(p.find(args[2]))
+        self.add_edge(p.find(self.id + 1))  # Add next block number
 
 # Contains a list of blocks
 class CFG_Function:
-    def __init__(self, name, arguments):
+    def __init__(self, name, arguments, parent):
         self.blocks = []     # Blocks of instructions that this function contains
         self.functions = []  # Other functions this function calls
 
         self.name = name
         self.args = arguments
+        self.edges = set()
+
+        self.parent = parent
+
+    # Finds a block that matches id `id`, otherwise returns None
+    def find(self, id):
+        for b in self.blocks:
+            if b.id == id:
+                return b
+        return None
+
+    def add_edge(self, edge, undirected=True):
+        if edge is not None:
+            self.edges.add(edge)
+            if undirected and edge not in self.edges:
+                edge.add_edge(self)
 
     def add_block(self, block):
         if block is not None:
             self.blocks.append(block)
 
-    def add_function_link(self, function):
-        if function is not None:
-            self.functions.append(function)
-
-    def prettyPrint(self):
+    def pretty_print(self):
         print("(function '" + self.name + "' " + str(self.args) + "")
         for block in self.blocks:
             print("(block " + str(block.id))
-            block.prettyPrint()
+            block.pretty_print()
 
-    # Connects all the blocks within the function
-    # Also returns all function names this block links to
     def connect(self):
-        functionNames = []
+        # Reset the sets
+        self.edges = set()
 
-        for block in self.blocks:
-            # Get all the blocks and function names that are linked
-            (names, ids) = block.connect()
-            links = [b for b in self.blocks if b.id in ids]
-            functionNames += names
-
-            # Add each relevant block as a link
-            for b in links:
-                block.add_block_link(b)
-
-        return functionNames
+        for b in self.blocks:
+            b.connect()
 
 # Contains a list of functions which link to other functions they call
 class CFG:
@@ -146,9 +148,16 @@ class CFG:
         if ir is not None:
             self.parse(ir)
 
-    def prettyPrint(self):
+    # Finds a function with name `name` in program, otherwise returns None
+    def find(self, name):
+        for f in self.functions:
+            if f.name == name:
+                return f
+        return None
+
+    def pretty_print(self):
         for function in self.functions:
-            function.prettyPrint()
+            function.pretty_print()
 
     # Converts the list of strings, ir, into a CFG data structure
     def parse(self, ir):
@@ -159,14 +168,14 @@ class CFG:
             # Check if a new function block is defined here
             cf = self.dfun.search(line)
             if cf is not None:
-                function = CFG_Function(cf.group(1), cf.group(2).split(' '))
+                function = CFG_Function(cf.group(1), cf.group(2).split(' '), self)
                 self.functions.append(function)
 
             # Check if a new block is defined here
             cb = self.dbr.search(line)
             if cb is not None:
                 # Update block
-                block = CFG_Block(int(cb.group(1)))
+                block = CFG_Block(int(cb.group(1)), function)
                 function.add_block(block)
 
             # Parse the instruction
@@ -177,17 +186,15 @@ class CFG:
                     block.add_instruction(parse_instruction(r["name"], match))
                     break
 
-    # Connects all functions within the graph
     def connect(self):
+        # Reset all program edges
+        for f in self.functions:
+            f.edges = set()
+            for b in f.blocks:
+                b.edges = set()
 
-        for function in self.functions:
-            # Get all the functions that are linked
-            names = function.connect()
-            links = [f for f in self.functions if f.name in names]
-
-            # Add each relevant function as a link
-            for f in links:
-                function.add_function_link(f)
+        for f in self.functions:
+            f.connect()
 
 # Read an entire file and return a list of strings representing each line
 def read_file(filename):
@@ -207,7 +214,7 @@ if __name__ == "__main__":
                 cfg = CFG(in_file)
                 cfg.connect()
                 deadCode.dce(cfg)
-                cfg.prettyPrint()
+                cfg.pretty_print()
         else:
             print("Error: File '" + sys.argv[1] + "' does not exist.")
     else:
