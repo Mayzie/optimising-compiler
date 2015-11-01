@@ -46,6 +46,7 @@ class CFG_Block:
     def __init__(self, id):
         self.instructions = []  # Instructions this block contains
         self.id = id
+        self.blocks = [] # Other blocks this block branches to
 
     def add_instruction(self, instruction):
         if instruction is not None:

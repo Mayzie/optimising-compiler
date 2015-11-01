@@ -1,7 +1,3 @@
-# This is just skeleton for an algorithm idea
-# I think there is a better way to do this,
-# though I will need to think it through a bit more first
-
 def dce(cfg):
     for function in cfg.functions:
         function = dce_function(function)
@@ -15,24 +11,35 @@ def dce_function(function):
     # TODO: Make sure that the block is being updated
     # Also make sure the correct registers are being passed
 
-    # Go through the blocks in reverse order
-    for block in function.blocks[::-1]:
-        (block, registers) = dce_block(block, registers)
+    # Maybe need to save the resulted result?
+    dce_block(function.blocks[0])
 
     return function
 
-def dce_block(block, registers):
+def dce_block(block):
     # TODO: Maybe somehow remove instructions if they are dead code
 
-    # Go through the instructions in reverse order
+    print("Block", block.id)
+    # Stores the registers for each evaluated block
+    blockRegisters = []
+
+    # Go through all blocks that this links to
+    for block in block.blocks:
+        blockRegisters.append(dce_block(block, registers))
+
+    # Get the union of the registers
+    registers = []
+    for regs in blockRegisters:
+        registers = list(set(registers) | set(regs))
+
+    # Go through instructions in reverse order
     for instr in block.instructions[::-1]:
-        registers = dce_instruction(instr)
+        registers = dce_instruction(instr, registers)
 
-    return (block, registers)
+    return registers
 
-def dce_instruction(instr):
-    # TODO: Go through relevant instructions
-        # If an relevant instruction is found,
-        # then make the necessary changes to registers
+def dce_instruction(instr, registers):
+    # Go through each type of instruction
+    # Check if any registers need to be updated
+
     pass
-
