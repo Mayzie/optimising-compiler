@@ -246,8 +246,12 @@ class CFG:
         # Reset all program edges
         for f in self.functions:
             f.edges = set()
+            f.in_edges = set()
+            f.out_edges = set()
             for b in f.blocks:
                 b.edges = set()
+                b.in_edges = set()
+                b.out_edges = set()
 
         for f in self.functions:
             f.connect()
