@@ -11,6 +11,19 @@ import redundantLoads
 #
 #        pass
 
+# Returns all objects that are connected to `start`
+def connected(start):
+    visited = set()
+    nodes = [start]
+    while len(nodes) > 0:
+        node = nodes.pop()
+        if node not in visited:
+            visited.add(node)
+            for e in node.edges:
+                nodes.append(e)
+
+    return visited
+
 # Return a tuple relevant to the instruction
 def parse_instruction(name, re):
     if name == "lc":
@@ -51,6 +64,9 @@ class CFG_Block:
         self.edges = set()
         self.blocks = [] # Other blocks this block branches to
 
+    def __repr__(self):
+        return str(self.id) + "@" + str(self.parent)
+
     def add_instruction(self, instruction):
         if instruction is not None:
             self.instructions.append(instruction)
@@ -60,7 +76,7 @@ class CFG_Block:
     def add_edge(self, edge, undirected=True):
         if edge is not None:
             self.edges.add(edge)
-            if undirected and edge not in self.edges:
+            if undirected and self not in edge.edges:
                 edge.add_edge(self)
 
     def pretty_print(self):
@@ -72,6 +88,7 @@ class CFG_Block:
         self.edges = set()
 
         p = self.parent
+        fall_through = True
 
         for name, *args in self.instructions:
             if name == "call":
@@ -79,7 +96,20 @@ class CFG_Block:
             elif name == "br":
                 self.add_edge(p.find(args[1]))
                 self.add_edge(p.find(args[2]))
-        self.add_edge(p.find(self.id + 1))  # Add next block number
+
+            if name == "ret" or name == "br":
+                fall_through = False
+
+        # Add the next block if current block does not exit prematurely
+        if fall_through and p.blocks.count(self) == 1:
+            index = p.blocks.index(self)
+            self.add_edge(p.blocks[index + 1] if len(p.block) >= index + 1 else None)
+
+    def unreachable_code(self):
+        for i, (name, *args) in enumerate(self.instructions):
+            if name == "ret" or name == "br":
+                self.instructions = self.instructions[0:i + 1]
+                break
 
 # Contains a list of blocks
 class CFG_Function:
@@ -93,6 +123,12 @@ class CFG_Function:
 
         self.parent = parent
 
+    def __repr__(self):
+        return self.name + "(" + ", ".join(self.args) + ")"
+
+    def __str__(self):
+        return self.name
+
     # Finds a block that matches id `id`, otherwise returns None
     def find(self, id):
         for b in self.blocks:
@@ -103,7 +139,7 @@ class CFG_Function:
     def add_edge(self, edge, undirected=True):
         if edge is not None:
             self.edges.add(edge)
-            if undirected and edge not in self.edges:
+            if undirected and self not in edge.edges:
                 edge.add_edge(self)
 
     def add_block(self, block):
@@ -122,6 +158,14 @@ class CFG_Function:
 
         for b in self.blocks:
             b.connect()
+
+    def unreachable_code(self):
+        fblock = self.blocks[0]  # Get the first block in function body (may not be block 0)
+        d_blks = set(self.blocks) - connected(fblock)
+        self.blocks = [b for b in self.blocks if b not in d_blks]
+
+        for b in self.blocks:
+            b.unreachable_code()
 
 # Contains a list of functions which link to other functions they call
 class CFG:
@@ -197,6 +241,14 @@ class CFG:
         for f in self.functions:
             f.connect()
 
+    def unreachable_code(self):
+        main = self.find("main")  # Find the `main' function
+        d_funs = set(self.functions) - connected(main)  # Find all functions disconnected from `main'
+        self.functions = [f for f in self.functions if f not in d_funs]  # Remove them
+
+        for f in self.functions:
+            f.unreachable_code()
+
 # Read an entire file and return a list of strings representing each line
 def read_file(filename):
     with open(filename, "r") as f:
@@ -215,8 +267,9 @@ if __name__ == "__main__":
                 cfg = CFG(in_file)
                 cfg.connect()
                 #deadCode.dce(cfg)
-                redundantLoads.rle(cfg)
-                cfg.prettyPrint()
+                # redundantLoads.rle(cfg)
+                cfg.unreachable_code()
+                cfg.pretty_print()
         else:
             print("Error: File '" + sys.argv[1] + "' does not exist.")
     else:
