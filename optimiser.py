@@ -61,7 +61,11 @@ class CFG_Block:
         self.instructions = []  # Instructions this block contains
         self.id = id
         self.parent = parent
+
         self.edges = set()
+        self.in_edges = set()
+        self.out_edges = set()
+
         self.blocks = [] # Other blocks this block branches to
 
     def __repr__(self):
@@ -76,6 +80,8 @@ class CFG_Block:
     def add_edge(self, edge, undirected=True):
         if edge is not None:
             self.edges.add(edge)
+            self.out_edges.add(edge)
+            edge.in_edges.add(self)
             if undirected and self not in edge.edges:
                 edge.add_edge(self)
 
@@ -119,7 +125,10 @@ class CFG_Function:
 
         self.name = name
         self.args = arguments
+
         self.edges = set()
+        self.in_edges = set()
+        self.out_edges = set()
 
         self.parent = parent
 
@@ -139,6 +148,8 @@ class CFG_Function:
     def add_edge(self, edge, undirected=True):
         if edge is not None:
             self.edges.add(edge)
+            self.out_edges.add(edge)
+            edge.in_edges(self)
             if undirected and self not in edge.edges:
                 edge.add_edge(self)
 
