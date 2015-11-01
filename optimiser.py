@@ -55,6 +55,28 @@ class CFG_Block:
         else:
             print("No instruction")
 
+    def add_block_link(self, block):
+        if block is not None:
+            self.blocks.append(block)
+
+    # Returns the block ids that this block links to
+    def connect(self):
+        functionNames = []
+        blockIds = []
+
+        for instruction in self.instructions:
+            # Stores the linked function names
+            if instruction[0] == "call":
+                functionNames.append(instruction[2])
+            # Stores the linked block ids
+            elif instruction[0] == "br":
+                blockIds.append(instruction[2])
+                blockIds.append(instruction[3])
+
+        # TODO: Maybe if there is no branch or return, and it's not the last block, then add the next block number?
+
+        return (functionNames, blockIds)
+
 # Contains a list of blocks
 class CFG_Function:
     def __init__(self, name, arguments):
@@ -70,6 +92,27 @@ class CFG_Function:
         if block is not None:
             print("(block " + str(block.id))
             self.blocks.append(block)
+
+    def add_function_link(self, function):
+        if function is not None:
+            self.functions.append(function)
+
+    # Connects all the blocks within the function
+    # Also returns all function names this block links to
+    def connect(self):
+        functionNames = []
+
+        for block in self.blocks:
+            # Get all the blocks and function names that are linked
+            (names, ids) = block.connect()
+            links = [b for b in self.blocks if b.id in ids]
+            functionNames += names
+
+            # Add each relevant block as a link
+            for b in links:
+                block.add_block_link(b)
+
+        return functionNames
 
 # Contains a list of functions which link to other functions they call
 class CFG:
@@ -124,6 +167,18 @@ class CFG:
                     block.add_instruction(parse_instruction(r["name"], match))
                     break
 
+    # Connects all functions within the graph
+    def connect(self):
+
+        for function in self.functions:
+            # Get all the functions that are linked
+            names = function.connect()
+            links = [f for f in self.functions if f.name in names]
+
+            # Add each relevant function as a link
+            for f in links:
+                function.add_function_link(f)
+
 # Read an entire file and return a list of strings representing each line
 def read_file(filename):
     with open(filename, "r") as f:
@@ -140,6 +195,7 @@ if __name__ == "__main__":
             in_file = read_file(sys.argv[1])
             if len(in_file) != 0:
                 cfg = CFG(in_file)
+                cfg.connect()
                 deadCode.dce(cfg)
         else:
             print("Error: File '" + sys.argv[1] + "' does not exist.")
