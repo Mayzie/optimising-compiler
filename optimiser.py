@@ -50,7 +50,6 @@ class CFG_Block:
 
     def add_instruction(self, instruction):
         if instruction is not None:
-            print(instruction)
             self.instructions.append(instruction)
         else:
             print("No instruction")
@@ -58,6 +57,10 @@ class CFG_Block:
     def add_block_link(self, block):
         if block is not None:
             self.blocks.append(block)
+
+    def prettyPrint(self):
+        for instruction in self.instructions:
+            print(instruction)
 
     # Returns the block ids that this block links to
     def connect(self):
@@ -86,16 +89,19 @@ class CFG_Function:
         self.name = name
         self.args = arguments
 
-        print("(function '" + name + "' " + str(arguments) + "")
-
     def add_block(self, block):
         if block is not None:
-            print("(block " + str(block.id))
             self.blocks.append(block)
 
     def add_function_link(self, function):
         if function is not None:
             self.functions.append(function)
+
+    def prettyPrint(self):
+        print("(function '" + self.name + "' " + str(self.args) + "")
+        for block in self.blocks:
+            print("(block " + str(block.id))
+            block.prettyPrint()
 
     # Connects all the blocks within the function
     # Also returns all function names this block links to
@@ -139,6 +145,10 @@ class CFG:
 
         if ir is not None:
             self.parse(ir)
+
+    def prettyPrint(self):
+        for function in self.functions:
+            function.prettyPrint()
 
     # Converts the list of strings, ir, into a CFG data structure
     def parse(self, ir):
@@ -197,6 +207,7 @@ if __name__ == "__main__":
                 cfg = CFG(in_file)
                 cfg.connect()
                 deadCode.dce(cfg)
+                cfg.prettyPrint()
         else:
             print("Error: File '" + sys.argv[1] + "' does not exist.")
     else:

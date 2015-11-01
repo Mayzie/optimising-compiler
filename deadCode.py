@@ -18,6 +18,7 @@ def dce_block(block):
     for instr in block.instructions[::-1]:
         remove = dce_instruction(instr, registers)
         # Remove any instruction if needed
+        # TODO: Maybe a bug if some instructions are the same?
         if remove:
             block.instructions.remove(instr)
 
