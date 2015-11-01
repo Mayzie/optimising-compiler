@@ -16,7 +16,7 @@ def dce_block(block, blocks):
     blocks |= {block}
 
     # Get the union of the registers (Rule 1)
-    for linkedBlock in block.blocks:
+    for linkedBlock in block.edges:
         registers |= dce_block(linkedBlock, blocks)
 
     # Go through instructions in reverse order
@@ -26,6 +26,7 @@ def dce_block(block, blocks):
         if remove:
             block.instructions.remove(instr)
 
+    ## TODO: maybe return a deepcopy of registers? (Write test)
     return registers
 
 def dce_instruction(instr, registers):
@@ -47,7 +48,8 @@ def dce_instruction(instr, registers):
     elif instr[0] == "ret":
         registers |= {instr[1]}
     elif instr[0] == "call":
-        registers |= {instr[3:]}
+        for reg in instr[3:]:
+            registers |= set(reg)
 
     # Rule 3 - If being assigned and register is not being used/read
     # Instructions: lc, ld, and maybe add, sub, mul, div, lt, gt, eq, call
@@ -63,12 +65,12 @@ def dce_instruction(instr, registers):
     elif instr[0] in instrGroup:
         if instr[1] not in registers:
             remove = True
-        if instr[1] not in {instr[2:4]}:
+        if instr[1] not in instr[2:4]:
             registers -= {instr[1]}
     elif instr[0] == "call":
         if instr[1] not in registers:
             remove = True
-        if instr[1] not in {instr[3:]}:
+        if instr[1] not in instr[3:]:
             registers -= {instr[1]}
 
     return remove

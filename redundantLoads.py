@@ -1,3 +1,6 @@
+import copy
+from collections import deque
+
 def rle(cfg):
     for function in cfg.functions:
         rle_function(function)
@@ -5,6 +8,26 @@ def rle(cfg):
 def rle_function(function):
     # Start from the first block
     rle_block(function.blocks[0], [], set())
+
+    # Use BFS to go through blocks
+    visited = set()
+
+    queue = deque([function.blocks[0]])
+    envMap = {function.blocks[0]: [[]]}
+
+    while queue:
+        block = queue.popleft()
+        envList = envMap[block]
+
+        # Calculate union of envList
+
+        env = rle_block(block, env, visited)
+
+        for b in block.blocks:
+            if b not in visited:
+                queue.append((b, env))
+
+
 
 def rle_block(block, env, blocks):
     # Make sure this block hasn't been checked before
@@ -16,9 +39,14 @@ def rle_block(block, env, blocks):
     for instr in block.instructions:
         rle_instruction(instr, env)
 
+    print("Block", block.id, env)
+
     # Optimise each of the linked blocks
+    # TODO: Move to rle_function() and use a BFS
+    # TODO: Also Union all the env whenever multiple blocks link to one
     for linkedBlock in block.blocks:
-        rle_block(linkedBlock, env, blocks)
+        envCopy = copy.deepcopy(env)
+        rle_block(linkedBlock, envCopy, blocks)
 
 def rle_instruction(instr, env):
     # Used to group instructions together and make if statements simpler
@@ -55,8 +83,6 @@ def rle_instruction(instr, env):
         removeFromEnv(instr[1], env)
     elif instr[0] == "call":
         removeFromEnv(instr[1], env)
-
-    print("Env", env)
 
 def removeFromEnv(x, env):
     pass
