@@ -68,6 +68,8 @@ class CFG_Block:
         self.in_edges = set()
         self.out_edges = set()
 
+        self.registers = set()
+
         self.blocks = [] # Other blocks this block branches to
 
     def __repr__(self):

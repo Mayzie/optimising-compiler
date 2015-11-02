@@ -1,14 +1,20 @@
+import copy
+
 def dce(cfg):
     for function in cfg.functions:
         dce_function(function)
 
 def dce_function(function):
+    # Empty out all the sets of live registers
+    for block in function.blocks:
+        block.registers = set()
+
     # Start from the first block (recursive)
     dce_block(function.blocks[0], set())
 
 def dce_block(block, blocks):
     # Stores the live registers throughout the block
-    registers = set()
+    registers = block.registers
 
     # Make sure this block hasn't been checked before
     if block in blocks:
@@ -17,7 +23,7 @@ def dce_block(block, blocks):
 
     # Get the union of the registers (Rule 1)
     for linkedBlock in block.out_edges:
-        registers |= dce_block(linkedBlock, blocks)
+        registers |= copy.deepcopy(dce_block(linkedBlock, blocks))
 
     # Go through instructions in reverse order
     for instr in block.instructions[::-1]:
@@ -26,7 +32,6 @@ def dce_block(block, blocks):
         if remove:
             block.instructions.remove(instr)
 
-    ## TODO: maybe return a deepcopy of registers? (Write test)
     return registers
 
 def dce_instruction(instr, registers):

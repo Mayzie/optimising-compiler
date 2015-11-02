@@ -40,6 +40,7 @@ def rle_function(function):
         for b in block.out_edges:
             if b not in visited:
                 envCopy = copy.deepcopy(env)
+                # Whether the block is already in the queue or not
                 if not envMap.get(b.id):
                     queue.append(b)
                     envMap[b.id] = [envCopy]
@@ -107,4 +108,3 @@ def replaceFromEnv(i, instr, env):
 def removeFromEnv(reg, env):
     reg = "r" + str(reg) if isinstance(reg, int) else reg
     [env.remove(e) for e in [e for e in env if reg in e]]
-
