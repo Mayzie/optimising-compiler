@@ -70,17 +70,17 @@ def rle_instruction(instr, env):
     # Rule 2 - If being used/read
     # Instructions - st, add, sub, mul, div, lt, gt, eq, br, ret, call
     if instr[0] == "st":
-        replaceInEnv(instr[2], env)
+        replaceFromEnv(instr[2], env)
     elif instr[0] in instrGroup:
-        replaceInEnv(instr[2], env)
-        replaceInEnv(instr[3], env)
+        for reg in instr[2:]:
+            replaceFromEnv(reg, env)
     elif instr[0] == "br":
-        replaceInEnv(instr[1], env)
+        replaceFromEnv(instr[1], env)
     elif instr[0] == "ret":
-        replaceInEnv(instr[1], env)
+        replaceFromEnv(instr[1], env)
     elif instr[0] == "call":
         for reg in instr[3:]:
-            replaceInEnv(reg, env)
+            replaceFromEnv(reg, env)
 
     # Rule 3 - If being assigned (not loads)
     # Instructions - st, add, sub, mul, div, lt, gt, eq, call
@@ -98,15 +98,13 @@ def addToEnv(reg, value, env):
     env.append((reg, value))
 
 # Go through env to see if register could be replaced with another register
-def replaceInEnv(reg, env):
-    # Go through e in env (only ones that have reg on left hand side)
+def replaceFromEnv(reg, env):
+    reg = "r" + str(reg)
     for e in env:
-        # If reg is on left hand side and value of e is a register (reg2)
-        if reg == e[0] and "r" in e[1]:
-            # Replace reg with reg2
-            print("Need to replace", reg, "with", reg2)
-            return e[1]
-    return ""
+        if reg == e[0] and "r" in str(e[1]):
+            print("Replace", reg, "with", e[1])
+            return e[1][1:]
+    return -1
 
 # Remove any elements in env referencing the register/variable
 def removeFromEnv(reg, env):
