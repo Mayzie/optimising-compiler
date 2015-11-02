@@ -1,7 +1,3 @@
-# Team Members
-- Daniel Collis - 430133523
-- Elie Moreau - 430085543
-
 # Programming Language
 - Python 3.5.0
 
