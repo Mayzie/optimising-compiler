@@ -129,7 +129,7 @@ class CFG_Block:
             self.out_edges.add(edge)
             edge.in_edges.add(self)
             if undirected and self not in edge.edges:
-                edge.add_edge(self)
+                edge.edges.add(self)
 
     def connect(self):
         # Reset the sets
@@ -228,7 +228,7 @@ class CFG_Function:
             self.out_edges.add(edge)
             edge.in_edges.add(self)
             if undirected and self not in edge.edges:
-                edge.add_edge(self)
+                edge.edges.add(self)
 
     def add_block(self, block):
         if block is not None:
