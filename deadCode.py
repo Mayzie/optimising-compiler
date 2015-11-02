@@ -3,7 +3,7 @@ def dce(cfg):
         dce_function(function)
 
 def dce_function(function):
-    # Start from the first block
+    # Start from the first block (recursive)
     dce_block(function.blocks[0], set())
 
 def dce_block(block, blocks):
