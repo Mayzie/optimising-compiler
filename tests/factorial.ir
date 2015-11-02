@@ -1,4 +1,4 @@
-( (factorial (n b)
+( (factorial (n)
   (0  (ld r1 n)
       (lc r2 0)
       (eq r3 r1 r2)

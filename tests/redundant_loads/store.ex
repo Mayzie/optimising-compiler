@@ -5,5 +5,5 @@
      (lc r3 2)
      (add r1 r1 r3)
      (st x r3)
-     (add r1 r2 r3)
-     (ret r1) ) ) )
+     (ld r4 x)
+     (ret r4) ) ) )
