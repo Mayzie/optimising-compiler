@@ -11,20 +11,26 @@ Give execution permission to the program and testing script
 ```
 chmod +x optimiser.py
 chmod +x optimise.sh
+chmod +x tests/run_tests.sh
 ```
 
 # Running the program
 
 Instructions on various flags and arguments for the program
 ```
-./optimiser.py -h
+./optimise.sh
 ```
 
 # Running the tests
 
 Execute the testing script
 ```
-./optimise.sh
+./optimise.sh <in_file> <out_file>
+```
+
+For finer grained control, run the Python program by itself:
+```
+./optimiser.py --help
 ```
 
 # Tasks Completed
@@ -33,11 +39,39 @@ Execute the testing script
 
 ## Control-Flow Graph
 
-* TODO
+The Control Flow graph is a relatively simple data structure. We essentially have two graphs, one
+for functions, and one for blocks within those functions. The reason we chose this is because these 
+two objects are intricately separate (i.e. functions reference each other, and blocks reference each
+other in their local function scope). We did it this way so the unreachable code portion can operate
+on entire functions (and remove them as necessary), or on individual blocks (and remove them as
+necessary). 
+
+Within the graphs, functions are connected via edges (we store both a directed graph, and an
+undirected graph in the data structure). Within each function, blocks are connected via edges
+(again, we store a directed graph, and an undirected graph in the data structure). The unreachable
+code optimisation process utilises the undirected graph, whereas the dead code and redundant load
+optimisation processes utilise the directed graph. The directed graph portion was required because 
+the dead code analysis required which blocks a block links to (outgoing edge), and in redundant 
+load elimination it was required to know which environment were being received from other blocks.
+
+The control flow graph can be initialised by passing in a string (the contents of an intermediate
+representation file). If the caller has passed in a string, then the control flow graph object will
+parse it into control flow graph (adding the function nodes, and the block nodes for each of those
+functions). To connect the graph, CFG.connect() is required to be called.
 
 ## Unreachable Code
 
-* TODO
+The unreachable code optimisation process executes in three steps:
+
+1. Finds all functions that are disconnected from the `main` function. It will then remove all of 
+the disconnected functions from main, as there is no way that these can be called whatsoever 
+throughout the execution of the program.
+2. Iterates over each function, and finds all blocks that are disconnected from the first block 
+(which may or may not be identified by id `0`). These disconnected blocks are then removed from the
+function, as it is impossible for these to execute.
+3. In each block, any instructions that follow a branch (`br`), or a return (`ret`) statement are
+removed, as the intermediate representation specification mandates that these two statements exit
+the current block.
 
 ## Dead Code Elimination
 
