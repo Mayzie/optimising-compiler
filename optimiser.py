@@ -28,31 +28,31 @@ def connected(start):
 # Return a tuple relevant to the instruction
 def parse_instruction(name, re):
     if name == "lc":
-        return ("lc", int(re.group(1)), int(re.group(2)))
+        return ["lc", int(re.group(1)), int(re.group(2))]
     elif name == "ld":
-        return ("ld", int(re.group(1)), re.group(2))
+        return ["ld", int(re.group(1)), re.group(2)]
     elif name == "st":
-        return ("st", re.group(1), int(re.group(2)))
+        return ["st", re.group(1), int(re.group(2))]
     elif name == "add":
-        return ("add", int(re.group(1)), int(re.group(2)), int(re.group(3)))
+        return ["add", int(re.group(1)), int(re.group(2)), int(re.group(3))]
     elif name == "sub":
-        return ("sub", int(re.group(1)), int(re.group(2)), int(re.group(3)))
+        return ["sub", int(re.group(1)), int(re.group(2)), int(re.group(3))]
     elif name == "mul":
-        return ("mul", int(re.group(1)), int(re.group(2)), int(re.group(3)))
+        return ["mul", int(re.group(1)), int(re.group(2)), int(re.group(3))]
     elif name == "div":
-        return ("div", int(re.group(1)), int(re.group(2)), int(re.group(3)))
+        return ["div", int(re.group(1)), int(re.group(2)), int(re.group(3))]
     elif name == "lt":
-        return ("lt", int(re.group(1)), int(re.group(2)), int(re.group(3)))
+        return ["lt", int(re.group(1)), int(re.group(2)), int(re.group(3))]
     elif name == "gt":
-        return ("gt", int(re.group(1)), int(re.group(2)), int(re.group(3)))
+        return ["gt", int(re.group(1)), int(re.group(2)), int(re.group(3))]
     elif name == "eq":
-        return ("eq", int(re.group(1)), int(re.group(2)), int(re.group(3)))
+        return ["eq", int(re.group(1)), int(re.group(2)), int(re.group(3))]
     elif name == "br":
-        return ("br", int(re.group(1)), int(re.group(2)), int(re.group(3)))
+        return ["br", int(re.group(1)), int(re.group(2)), int(re.group(3))]
     elif name == "ret":
-        return ("ret", int(re.group(1)))
+        return ["ret", int(re.group(1))]
     elif name == "call":
-        return ("call", int(re.group(1)), re.group(2), [int(s[1:]) for s in re.group(3).split(' ')])
+        return ["call", int(re.group(1)), re.group(2), [int(s[1:]) for s in re.group(3).split(' ')]]
     else:
         return None
 
@@ -186,17 +186,28 @@ class CFG_Function:
 
     def eq(self, other):
         if other is None:
+            print("CFG_Function: other is None")
             return False
 
         if not self.name == other.name:
+            print("CFG_Function: self.name != other.name")
             return False
 
         if not self.args == other.args:
+            print("CFG_Function: self.args != other.args")
             return False
 
         if not (self.edges == other.edges or
          self.in_edges == other.in_edges or
          self.out_edges == other.out_edges):
+            print("CFG_Function: edges not equal")
+            print("self.blocks", self.blocks)
+            print("other.blocks", other.blocks)
+            print("self.edges", self.edges)
+            print("other.edges", other.edges)
+            print("self.edges == other.edges", self.edges == other.edges)
+            print("self.in_edges == other.in_edges", self.in_edges == other.in_edges)
+            print("self.out_edges == other.out_edges", self.out_edges == other.out_edges)
             return False
 
         for sb, ob in zip_longest(self.blocks, other.blocks):
@@ -285,10 +296,14 @@ class CFG:
         return out
 
     def eq(self, other):
+        print("self.functions", self.functions)
+        print("other.functions", other.functions)
         for sf, of in zip_longest(self.functions, other.functions):
             if sf is None:
+                print("CFG: sf is None")
                 return False
             if not sf.eq(of):
+                print("CFG: sf.eq(of) is False")
                 return False
         return True
 
