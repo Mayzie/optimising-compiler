@@ -76,6 +76,11 @@ else
   UNREACH_DIR=$1"unreachable_code"
   DEAD_DIR=$1"dead_code"
   REDUN_DIR=$1"redundant_loads"
+  GREEN='\033[1;32m'
+  RED='\033[1;31m'
+  RESET='\033[0m'
+  PASSED="${GREEN}Passed${RESET}: "
+  FAILED="${RED}Failed${RESET}: "
 
   if [ $UNREACH = true ]; then
     if [ -d $UNREACH_DIR ] ; then
@@ -87,9 +92,9 @@ else
           diffcount=`sdiff -sb $fname"ex" .test.out | wc -L`
 
           if [ $diffcount -eq 0 ] ; then
-            echo "Passed: $fname""ir"
+            printf "$PASSED${fname}ir\n"
           else
-            echo "Failed: $fname""ir"
+            printf "$FAILED${fname}ir\n"
           fi
         fi
       done
@@ -106,9 +111,9 @@ else
           diffcount=`sdiff -sb $fname"ex" .test.out | wc -L`
 
           if [ $diffcount -eq 0 ]; then
-            echo "Passed: $fname""ir"
+            printf "$PASSED${fname}ir\n"
           else
-            echo "Failed: $fname""ir"
+            printf "$FAILED${fname}ir\n"
           fi
         fi
       done
@@ -125,9 +130,9 @@ else
           diffcount=`sdiff -sb $fname"ex" .test.out | wc -L`
 
           if [ $diffcount -eq 0 ]; then
-            echo "Passed: $fname""ir"
+            printf "$PASSED${fname}ir\n"
           else
-            echo "Failed: $fname""ir"
+            printf "$FAILED${fname}ir\n"
           fi
         fi
       done
