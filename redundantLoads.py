@@ -50,7 +50,6 @@ def rle_function(function):
         del envMap[block]
 
 def rle_block(block, env):
-    # Go through instructions
     for instr in block.instructions:
         rle_instruction(instr, env)
 
@@ -70,17 +69,17 @@ def rle_instruction(instr, env):
     # Rule 2 - If being used/read
     # Instructions - st, add, sub, mul, div, lt, gt, eq, br, ret, call
     if instr[0] == "st":
-        replaceFromEnv(instr[2], env)
+        replaceFromEnv(2, instr, env)
     elif instr[0] in instrGroup:
         for reg in instr[2:]:
-            replaceFromEnv(reg, env)
+            replaceFromEnv(instr.index(reg), instr, env)
     elif instr[0] == "br":
-        replaceFromEnv(instr[1], env)
+        replaceFromEnv(1, instr, env)
     elif instr[0] == "ret":
-        replaceFromEnv(instr[1], env)
+        replaceFromEnv(1, instr, env)
     elif instr[0] == "call":
         for reg in instr[3:]:
-            replaceFromEnv(reg, env)
+            replaceFromEnv(instr.index(reg), instr, env)
 
     # Rule 3 - If being assigned (not loads)
     # Instructions - st, add, sub, mul, div, lt, gt, eq, call
@@ -98,13 +97,13 @@ def addToEnv(reg, value, env):
     env.append((reg, value))
 
 # Go through env to see if register could be replaced with another register
-def replaceFromEnv(reg, env):
-    reg = "r" + str(reg)
+def replaceFromEnv(i, instr, env):
+    reg = "r" + str(instr[i])
     for e in env:
         if reg == e[0] and "r" in str(e[1]):
-            print("Replace", reg, "with", e[1])
-            return e[1][1:]
-    return -1
+            #print("Replace", reg, "with", e[1])
+            instr[i] = e[1][1:]
+            return
 
 # Remove any elements in env referencing the register/variable
 def removeFromEnv(reg, env):
