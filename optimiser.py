@@ -6,13 +6,6 @@ import redundantLoads
 from itertools import zip_longest
 from math import inf
 
-#class Instruction:
-#    def __init__(self, type, data):
-#        self.type = type
-#        self.data = data
-#
-#        pass
-
 # Returns all objects that are connected to `start`
 def connected(start):
     visited = set()
@@ -70,11 +63,10 @@ class CFG_Block:
 
         self.registers = set()
 
-        self.blocks = [] # Other blocks this block branches to
-
     def __repr__(self):
         return str(self.id) + "@" + str(self.parent)
 
+    # Overload this objects str() method to return a human readable version of this object
     def __str__(self):
         operators = ["add", "sub", "mul", "div", "lt", "gt", "eq",]
         sing_regs = ["lc", "ld", "br", "ret", "call",]
@@ -100,15 +92,12 @@ class CFG_Block:
             out_instr = [out_instr[0]] + [" " * 8 + s for s in out_instr[1:]]
         return out + "\n".join(out_instr) + " )"
 
+    # Overload the equality operator
     def __eq__(self, other):
         if other is None:
             return False
         if not self.id == other.id:
             return False
-#        if not (self.edges == other.edges or
-#         self.in_edges == other.in_edges or 
-#         self.out_edges == other.out_edges):
-#            return False
         for si, oi in zip_longest(self.instructions, other.instructions):
             if si is None:
                 return False
@@ -119,12 +108,6 @@ class CFG_Block:
 
     def __hash__(self):
         return hash(str(self))
-
-    def clone(self, parent):
-        ret = CFG_Block(self.id, parent)
-        ret.instructions = [i for i in self.instructions]
-
-        return ret
 
     def add_instruction(self, instruction):
         if instruction is not None:
@@ -160,6 +143,7 @@ class CFG_Block:
             index = p.blocks.index(self)
             self.add_edge(p.blocks[index + 1] if len(p.blocks) >= index + 1 else None)
 
+    # Perform the unreachable code optimisation
     def unreachable_code(self):
         for i, (name, *args) in enumerate(self.instructions):
             if name == "ret" or name == "br":
@@ -180,9 +164,10 @@ class CFG_Function:
 
         self.parent = parent
 
-#    def __repr__(self):
-#        return self.name + "(" + ", ".join(self.args) + ")"
+    def __repr__(self):
+        return self.name + "(" + ", ".join(self.args) + ")"
 
+    # Overload this objects str() method to return a human readable version of this object
     def __str__(self):
         out = "(" + self.name + " (" + " ".join(self.args) + ")\n"
         out_blocks = []
@@ -191,6 +176,7 @@ class CFG_Function:
         out += "\n".join(out_blocks) + " )"
         return out
 
+    # Overload the equality operator
     def __eq__(self, other):
         if other is None:
             return False
@@ -212,13 +198,6 @@ class CFG_Function:
 
     def __hash__(self):
         return hash(str(self))
-
-    def clone(self, parent):
-        ret = CFG_Function(self.name, self.args, parent)
-        for b in self.blocks:
-            ret.add_block(b.clone(ret))
-        
-        return ret
 
     # Finds a block that matches id `id`, otherwise returns None
     def find(self, id):
@@ -246,6 +225,7 @@ class CFG_Function:
         for b in self.blocks:
             b.connect()
 
+    # Perform the unreachable code optimisation
     def unreachable_code(self):
         fblock = self.blocks[0]  # Get the first block in function body (may not be block 0)
         d_blks = set(self.blocks) - connected(fblock)
@@ -259,6 +239,7 @@ class CFG:
     dfun = re.compile("\(([A-z][A-z0-9]*)\s+\(((\s*[A-z][A-z0-9]*\s*)*)\)")
     dbr = re.compile("\((-?[0-9]+)\s+")
 
+    # Regular expressions to parse each instruction (with groupings)
     ilc = {"name" : "lc",
             "re" : re.compile("\(lc\s+r([1-9][0-9]*)\s+([0-9]+)\)")}
     ild = {"name" : "ld",
@@ -293,6 +274,7 @@ class CFG:
         if ir is not None:
             self.parse(ir)
 
+    # Overload this objects str() method to return a human readable version of this object
     def __str__(self):
         out = "("
         out_funcs = []
@@ -302,6 +284,7 @@ class CFG:
         out += "\n".join(out_funcs) + " )"
         return out
 
+    # Overload the equality operator
     def __eq__(self, other):
         for sf, of in zip_longest(self.functions, other.functions):
             if sf is None:
@@ -309,14 +292,6 @@ class CFG:
             if not sf == of:
                 return False
         return True
-
-    def clone(self):
-        ret = CFG()
-        for f in self.functions:
-            ret.functions.append(f.clone(ret))
-
-        ret.connect()
-        return ret
 
     # Finds a function with name `name` in program, otherwise returns None
     def find(self, name):
@@ -332,18 +307,21 @@ class CFG:
         
         i = 0
         while i < len(ir):
+            # Check if it is a function, and if so, add to current program
             cf = self.dfun.match(ir[i:])
             if cf is not None:
                 function = CFG_Function(cf.group(1), cf.group(2).split(' '), self)
                 self.functions.append(function)
                 i += len(cf.group(0))
 
+            # Check if it is a block and if so, add to current function
             cb = self.dbr.match(ir[i:])
             if cb is not None:
                 block = CFG_Block(int(cb.group(1)), function)
                 function.add_block(block)
                 i += len(cb.group(0))
 
+            # Parse instructions and add to current block
             match = None
             for r in self.instrs:
                 match = r["re"].match(ir[i:])
@@ -353,28 +331,7 @@ class CFG:
 
             i += 1
 
-#        for line in ir:
-#            # Check if a new function block is defined here
-#            cf = self.dfun.search(line)
-#            if cf is not None:
-#                function = CFG_Function(cf.group(1), cf.group(2).split(' '), self)
-#                self.functions.append(function)
-#
-#            # Check if a new block is defined here
-#            cb = self.dbr.search(line)
-#            if cb is not None:
-#                # Update block
-#                block = CFG_Block(int(cb.group(1)), function)
-#                function.add_block(block)
-#
-#            # Parse the instruction
-#            match = None
-#            for r in self.instrs:
-#                match = r["re"].search(line)
-#                if match is not None:
-#                    block.add_instruction(parse_instruction(r["name"], match))
-#                    break
-
+    # Connect the graph
     def connect(self):
         # Reset all program edges
         for f in self.functions:
@@ -389,6 +346,7 @@ class CFG:
         for f in self.functions:
             f.connect()
 
+    # Perform the unreachable code optimisation
     def unreachable_code(self):
         main = self.find("main")  # Find the `main' function
         d_funs = set(self.functions) - connected(main)  # Find all functions disconnected from `main'
@@ -397,11 +355,10 @@ class CFG:
         for f in self.functions:
             f.unreachable_code()
 
-# Read an entire file and return a list of strings representing each line
+# Read an entire file and return a string representing the entire file
 def read_file(filename):
     with open(filename, "r") as f:
-        ret = f.read()
-#        ret = [l.strip() for l in f.read().splitlines()]
+        ret = f.read().strip()
     return ret
 
 if __name__ == "__main__":
@@ -409,6 +366,7 @@ if __name__ == "__main__":
     import os.path
     import argparse
 
+    # Parse program arguments
     arg_parse = argparse.ArgumentParser(prog = "ir_optimise",
                                      description = "Optimises *correct* intermediate representation programs generated by the COMP3109 Assignment 2 compiler. Specifying a file containing invalid IR code will result in undefined behaviour and potential crashes.",
                                      epilog = "Not specifying an optimisation technique or having 0 passes will result in no changes and will output the original program.")
@@ -420,11 +378,10 @@ if __name__ == "__main__":
     arg_parse.add_argument("-n", "-p", "--passes", type = int, default = -1, help = "Number of optimisation passes to perform. Values < 0 will perform as many passes until no more optimisations can be made (default: -1)")
 
     args = arg_parse.parse_args()
-    # The first argument in Python is the file/program name, so we check for a length of 2
     if args.input is not None:
-        if os.path.isfile(args.input):
+        if os.path.isfile(args.input):  # Check if input file exists
             in_file = read_file(args.input)
-            if len(in_file) != 0:
+            if len(in_file) != 0:  # Check that it is not empty
                 prev_cfg = CFG()
                 cfg = CFG(in_file)
                 if args.passes < 0:
@@ -437,6 +394,7 @@ if __name__ == "__main__":
                     if prev_cfg == cfg:
                         break
 
+                    # Store current CFG and create a new one
                     prev_cfg = cfg
                     cfg = CFG(str(prev_cfg).replace("\n", " "))
                     cfg.connect()
