@@ -6,24 +6,25 @@ def rle(cfg):
         rle_function(function)
 
 def rle_function(function):
-    # Possible Bugs:
-    # Might not calculate the intersection properly
-    # Doesn't account for loops
-
     # Needed for BFS
     visited = set()
     queue = deque([function.blocks[0]])
-    envMap = {function.blocks[0]: []}
+    envMap = {function.blocks[0].id: []}
+
+    # Keeps track of whether we have hit a loop or not
+    loop = 0
 
     # Use BFS to go through blocks
     while queue:
         block = queue.popleft()
-        envList = envMap[block]
+        envList = envMap[block.id]
 
-        # Make sure the block has all the envs it needs
-        if len(envList) != len(block.in_edges):
+        # Make sure the block has all the envs it needs (if not looped yet)
+        if loop < len(queue) and len(envList) != len(block.in_edges):
             queue.append(block)
+            loop += 1
             continue
+        loop = 0
 
         # Calculate intersect of envList into env
         env = []
@@ -32,28 +33,26 @@ def rle_function(function):
             for newEnv in envList:
                 env = sorted(set(env) & set(newEnv), key = env.index)
 
-        # Maybe redundant assignment of env?
+        # Optimise the block
         rle_block(block, env)
 
         # Add out edge to queue if not already accounted for
         for b in block.out_edges:
             if b not in visited:
                 envCopy = copy.deepcopy(env)
-                if not envMap.get(b):
+                if not envMap.get(b.id):
                     queue.append(b)
-                    envMap[b] = [envCopy]
+                    envMap[b.id] = [envCopy]
                 else:
-                    envMap[b].append(envCopy)
+                    envMap[b.id].append(envCopy)
 
         # Mark as visited and remove entry in envMap
         visited.add(block)
-        del envMap[block]
+        del envMap[block.id]
 
 def rle_block(block, env):
     for instr in block.instructions:
         rle_instruction(instr, env)
-
-    print("Block", block.id, env)
 
 def rle_instruction(instr, env):
     # Used to group instructions together and make if statements simpler
@@ -101,12 +100,11 @@ def replaceFromEnv(i, instr, env):
     reg = "r" + str(instr[i])
     for e in env:
         if reg == e[0] and "r" in str(e[1]):
-            #print("Replace", reg, "with", e[1])
             instr[i] = e[1][1:]
             return
 
 # Remove any elements in env referencing the register/variable
 def removeFromEnv(reg, env):
-    reg = "r" + str(reg)
+    reg = "r" + str(reg) if isinstance(reg, int) else reg
     [env.remove(e) for e in [e for e in env if reg in e]]
 
