@@ -73,8 +73,8 @@ class CFG_Block:
         return str(self.id) + "@" + str(self.parent)
 
     def __str__(self):
-        operators = ["add", "sub", "mul", "div", "lt", "gt", "eq"]
-        sing_regs = ["lc", "ld", "br", "ret", "call"]
+        operators = ["add", "sub", "mul", "div", "lt", "gt", "eq",]
+        sing_regs = ["lc", "ld", "br", "ret", "call",]
         out = " " * 6 + "(" + str(self.id)
         out_instr = []
         for name, *args in self.instructions:
@@ -96,15 +96,15 @@ class CFG_Block:
         out_instr = [out_instr[0]] + [" " * 8 + s for s in out_instr[1:]]
         return out + "\n".join(out_instr) + " )"
 
-    def eq(self, other):
+    def __eq__(self, other):
         if other is None:
             return False
         if not self.id == other.id:
             return False
-        if not (self.edges == other.edges or
-         self.in_edges == other.in_edges or 
-         self.out_edges == other.out_edges):
-            return False
+#        if not (self.edges == other.edges or
+#         self.in_edges == other.in_edges or 
+#         self.out_edges == other.out_edges):
+#            return False
         for si, oi in zip_longest(self.instructions, other.instructions):
             if si is None:
                 return False
@@ -112,6 +112,9 @@ class CFG_Block:
             if not si == oi:
                 return False
         return True
+
+    def __hash__(self):
+        return hash(str(self))
 
     def clone(self, parent):
         ret = CFG_Block(self.id, parent)
@@ -173,8 +176,8 @@ class CFG_Function:
 
         self.parent = parent
 
-    def __repr__(self):
-        return self.name + "(" + ", ".join(self.args) + ")"
+#    def __repr__(self):
+#        return self.name + "(" + ", ".join(self.args) + ")"
 
     def __str__(self):
         out = "(" + self.name + " (" + " ".join(self.args) + ")\n"
@@ -184,40 +187,27 @@ class CFG_Function:
         out += "\n".join(out_blocks) + " )"
         return out
 
-    def eq(self, other):
+    def __eq__(self, other):
         if other is None:
-            print("CFG_Function: other is None")
             return False
 
         if not self.name == other.name:
-            print("CFG_Function: self.name != other.name")
             return False
 
         if not self.args == other.args:
-            print("CFG_Function: self.args != other.args")
-            return False
-
-        if not (self.edges == other.edges or
-         self.in_edges == other.in_edges or
-         self.out_edges == other.out_edges):
-            print("CFG_Function: edges not equal")
-            print("self.blocks", self.blocks)
-            print("other.blocks", other.blocks)
-            print("self.edges", self.edges)
-            print("other.edges", other.edges)
-            print("self.edges == other.edges", self.edges == other.edges)
-            print("self.in_edges == other.in_edges", self.in_edges == other.in_edges)
-            print("self.out_edges == other.out_edges", self.out_edges == other.out_edges)
             return False
 
         for sb, ob in zip_longest(self.blocks, other.blocks):
             if sb is None:
                 return False
 
-            if not sb.eq(ob):
+            if not sb == ob:
                 return False
 
         return True
+
+    def __hash__(self):
+        return hash(str(self))
 
     def clone(self, parent):
         ret = CFG_Function(self.name, self.args, parent)
@@ -295,15 +285,11 @@ class CFG:
         out += "\n".join(out_funcs) + " )"
         return out
 
-    def eq(self, other):
-        print("self.functions", self.functions)
-        print("other.functions", other.functions)
+    def __eq__(self, other):
         for sf, of in zip_longest(self.functions, other.functions):
             if sf is None:
-                print("CFG: sf is None")
                 return False
-            if not sf.eq(of):
-                print("CFG: sf.eq(of) is False")
+            if not sf == of:
                 return False
         return True
 
@@ -390,8 +376,10 @@ if __name__ == "__main__":
                 cfg = CFG(in_file)
                 cfg.connect()
                 # Keep going until there are no more optimisations
-                while not cfg.eq(prev_cfg):
-                    prev_cfg = cfg.clone()
+                while not cfg == prev_cfg:
+                    prev_cfg = cfg
+                    cfg = CFG([l.strip() for l in str(prev_cfg).splitlines()])
+                    cfg.connect()
 
                     cfg.unreachable_code()
                     deadCode.dce(cfg)
