@@ -1,6 +1,5 @@
 ( (main (x)
   (0  (ld r1 x)
-      (br r1 1 2)
       (ld r2 x)
-      (br r3 0 0)
+      (ret r2)
       (call r3 main r1) ) )
