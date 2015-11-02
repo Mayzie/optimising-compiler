@@ -158,7 +158,7 @@ class CFG_Block:
         # Add the next block if current block does not exit prematurely
         if fall_through and p.blocks.count(self) == 1:
             index = p.blocks.index(self)
-            self.add_edge(p.blocks[index + 1] if len(p.block) >= index + 1 else None)
+            self.add_edge(p.blocks[index + 1] if len(p.blocks) >= index + 1 else None)
 
     def unreachable_code(self):
         for i, (name, *args) in enumerate(self.instructions):
@@ -259,19 +259,32 @@ class CFG:
     dfun = re.compile("\(([A-z][A-z0-9]*)\s+\(((\s*[A-z][A-z0-9]*\s*)*)\)")
     dbr = re.compile("\((-?[0-9]+)\s+")
 
-    ilc = {"name" : "lc", "re" : re.compile("\(lc\s+r([1-9][0-9]*)\s+([0-9]+)\)")}
-    ild = {"name" : "ld", "re" : re.compile("\(ld\s+r([1-9][0-9]*)\s+([A-z][A-z0-9]*)\)")}
-    ist = {"name" : "st", "re" : re.compile("\(st\s+([A-z][A-z0-9]*)\s+r([1-9][0-9]*)\)")}
-    iadd = {"name" : "add", "re" : re.compile("\(add\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
-    isub = {"name" : "sub", "re" : re.compile("\(sub\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
-    imul = {"name" : "mul", "re" : re.compile("\(mul\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
-    idiv = {"name" : "div", "re" : re.compile("\(div\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
-    ilt = {"name" : "lt", "re" : re.compile("\(lt\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
-    igt = {"name" : "gt", "re" : re.compile("\(gt\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
-    ieq = {"name" : "eq", "re" : re.compile("\(eq\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
-    ibr = {"name" : "br", "re" : re.compile("\(br\s+r([1-9][0-9]*)\s+(-?[0-9]+)\s+(-?[0-9]+)\)")}
-    iret = {"name" : "ret", "re" : re.compile("\(ret\s+r([1-9][0-9]*)\)")}
-    icall = {"name" : "call", "re" : re.compile("\(call\s+r([1-9][0-9]*)\s+([A-z][A-z0-9]*)\s+((\s*r[1-9][0-9]*\s*)*)\)")}
+    ilc = {"name" : "lc",
+            "re" : re.compile("\(lc\s+r([1-9][0-9]*)\s+([0-9]+)\)")}
+    ild = {"name" : "ld",
+            "re" : re.compile("\(ld\s+r([1-9][0-9]*)\s+([A-z][A-z0-9]*)\)")}
+    ist = {"name" : "st",
+            "re" : re.compile("\(st\s+([A-z][A-z0-9]*)\s+r([1-9][0-9]*)\)")}
+    iadd = {"name" : "add",
+            "re" : re.compile("\(add\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
+    isub = {"name" : "sub",
+            "re" : re.compile("\(sub\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
+    imul = {"name" : "mul",
+            "re" : re.compile("\(mul\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
+    idiv = {"name" : "div",
+            "re" : re.compile("\(div\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
+    ilt = {"name" : "lt",
+            "re" : re.compile("\(lt\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
+    igt = {"name" : "gt",
+            "re" : re.compile("\(gt\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
+    ieq = {"name" : "eq",
+            "re" : re.compile("\(eq\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\s+r([1-9][0-9]*)\)")}
+    ibr = {"name" : "br",
+            "re" : re.compile("\(br\s+r([1-9][0-9]*)\s+(-?[0-9]+)\s+(-?[0-9]+)\)")}
+    iret = {"name" : "ret",
+            "re" : re.compile("\(ret\s+r([1-9][0-9]*)\)")}
+    icall = {"name" : "call",
+             "re" : re.compile("\(call\s+r([1-9][0-9]*)\s+([A-z][A-z0-9]*)\s+((\s*r[1-9][0-9]*\s*)*)\)")}
     instrs = [ilc, ild, ist, iadd, isub, imul, idiv, ilt, igt, ieq, ibr, iret, icall, ]
 
     def __init__(self, ir=None):

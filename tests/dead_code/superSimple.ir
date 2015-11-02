@@ -1,0 +1,7 @@
+( (main ()
+    (0  (ld r1 n)
+        (lc r2 5)
+        (ld r3 n)
+        (lc r4 6)
+        (ld r5 n)
+        (ret r3) ) ) )
