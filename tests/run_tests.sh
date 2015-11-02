@@ -87,9 +87,9 @@ else
           diffcount=`sdiff -sb $i $fname"ex" | wc -L`
 
           if [ $diffcount -eq 0 ] ; then
-            echo "$fname""ir: Passed"
+            echo "Passed: $fname""ir"
           else
-            echo "$fname""ir: Failed"
+            echo "Failed: $fname""ir"
           fi
         fi
       done
@@ -106,9 +106,9 @@ else
           diffcount=`sdiff -sb $fname"ex" .test.out | wc -L`
 
           if [ $diffcount -eq 0 ]; then
-            echo "$fname""ir: Passed"
+            echo "Passed: $fname""ir"
           else
-            echo "$fname""ir: Failed"
+            echo "Failed: $fname""ir"
           fi
         fi
       done
@@ -125,9 +125,9 @@ else
           diffcount=`sdiff -sb $fname"ex" .test.out | wc -L`
 
           if [ $diffcount -eq 0 ]; then
-            echo "$fname""ir: Passed"
+            echo "Passed: $fname""ir"
           else
-            echo "$fname""ir: Failed"
+            echo "Failed: $fname""ir"
           fi
         fi
       done
