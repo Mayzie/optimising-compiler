@@ -42,11 +42,11 @@ Execute the testing script
 ## Dead Code Elimination
 
 The data-flow analysis for our dead code elimination is executed on each function in the control
-flow graph, since each function has it's own set of live registers that don't influence other
-functions
+flow graph, since each function has its own set of live registers that don't influence other
+functions.
 
 Within each function, the dead code elimination is run in reverse order of all the instructions in
-each block, passing up the set of live registers to any blocks that link to the current block
+each block, passing up the set of live registers to any blocks that link to the current block.
 
 ### Transfer Functions
 
@@ -56,31 +56,34 @@ block that it links to, in order to retrieve the set of live registers from each
 It will then run the merge operator on all the received sets of registers to create the union.
 Once that is created, the block will go through each of its instructions in reverse order,
 updating the set of live registers as necessary at each instruction. If any instruction is flagged
-for removal, then the instruction will be removed
+for removal, then the instruction will be removed.
 
 ### Merge Operator
 
 For the merge operator, each block will merge all the received sets of registers from the blocks it
 links to. The merge involves calculating the union of all the sets of registers. This is necessary
-as we want to keep any record of any registers being live, or possibly used
+as we want to keep any record of any registers being live, or possibly used.
 
 ### Instruction Analysis
 
 For each instruction, there are two checks. The first check accounts for any instructions in which a
-register is used/read. If this is the case, then the register is added to the set of live registers
+register is used/read. If this is the case, then the register is added to the set of live registers.
 
 The second check accounts for any instructions in which a register is assigned to and not being
 used/read. If this is the case, the register is removed from the set of live registers. If the
 register wasn't in the set of live registers prior to the instruction, then the instruction is
-flagged as dead code to be removed
+flagged as dead code to be removed.
 
 ## Redundant Load Elimination
 
 * TODO: Talk about data-flow analysis (overall)
+The data-flow analysis for our redundant load elimination is executed on each function in the
+control flow graph, since each function has its own environment of registers that don't influence
+other functions.
 
-### Lattice
-
-* TODO
+Within each function, the redundant load elimination is run using a Breadth First Search (BFS) over
+every block in the current function in the control flow graph. When a block is popped off the queue
+and it has all the environments
 
 ### Transfer Functions
 

@@ -1,6 +1,6 @@
 ( (main (x)
   (0  (ld r1 x)
-      (lc r2 x)
+      (ld r2 x)
       (add r3 r2 r1)
       (add r3 r1 r2)
       (sub r3 r2 r1)
