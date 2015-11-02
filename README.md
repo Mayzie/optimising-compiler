@@ -1,6 +1,6 @@
 # Team Members
-- Daniel Collis
-- Elie Moreau
+- Daniel Collis - 430133523
+- Elie Moreau - 430085543
 
 # Programming Language
 - Python 3.5.0
@@ -21,21 +21,46 @@ Instructions on various flags and arguments for the program
 ./optimise.sh
 ```
 
-# Running the tests
-
 Execute the testing script
 ```
 ./optimise.sh <in_file> <out_file>
 ```
 
-For finer grained control, run the Python program by itself:
+* For finer grained control, run the Python program without the aid of the shell script:
 ```
 ./optimiser.py --help
 ```
 
+## Running Testing Suite
+
+Instructions on various flags and arguments for the testing script
+```
+./tests/run_tests.sh
+```
+
+The script exepcts *at least* 2 arguments. You will need to specify the directory that contains the 
+the test files (*.ir) and their expected output (*.ex). Each of these test files should be located
+within specific directories which their respective optimisation will then be performed and comapred
+to the expected output.
+
+The second argument (or third, or fourth) expects a single character, one of either: `u`, `d`, or `r`.
+`u` tests for unreachable code, `d` tests for dead code elimination, and `r` tests for redundant 
+load elimination. You can specify any or all of the three options, provided they are separated.
+
+An example invocation that tests unreachable code and redundant load elimination only:
+```
+./tests/run_tests.sh tests/ u r
+```
+
+An example invocation that tests all optimisations available:
+```
+./tests/run_tests.sh tests/ d r u
+```
+
 # Tasks Completed
 
-* TODO: In each section, mention if we got stuck at a particular point, or couldn't work something out, then also explain what went wrong
+All tasks have been completed and thoroughly tested. No major obstacles were encountered, as we
+were utilising a nice familiar language (Python) :-D
 
 ## Control-Flow Graph
 
