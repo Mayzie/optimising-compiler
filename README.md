@@ -1,13 +1,18 @@
+# Team Members
+- Daniel Collis
+- Elie Moreau
+
+# Programming Language
+Python 3.5.0
+
+# Brief Description
+
 # Initial Configuration
 
-Clone the repository
-```
-git clone git@bitbucket.org:Mayzie/comp3109_assignment3.git
-```
-
-Give execution permission to the program
+Give execution permission to the program and testing script
 ```
 chmod +x optimiser.py
+chmod +x optimise.sh
 ```
 
 # Running the program
@@ -15,6 +20,13 @@ chmod +x optimiser.py
 Execute the program, substituting 'test.ir' with an input test file
 ```
 ./optimiser.py test.ir
+```
+
+# Running the tests
+
+Execute the testing script
+```
+./optimise.sh
 ```
 
 # Authors
