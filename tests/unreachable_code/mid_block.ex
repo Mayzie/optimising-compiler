@@ -1,0 +1,6 @@
+(  (main (x)
+      (0    (ld r1 x)
+            (ld r2 x)
+            (br r3 0 1) )
+      (1    (ld r2 x)
+            (ret r2) ) ) )

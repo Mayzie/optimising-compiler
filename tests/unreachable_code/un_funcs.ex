@@ -1,0 +1,5 @@
+(  (main (n)
+      (0    (ld r1 n)
+            (st tmp r2)
+            (ld r3 tmp)
+            (ret r3) ) ) )

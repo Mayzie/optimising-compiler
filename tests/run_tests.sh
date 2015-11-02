@@ -84,7 +84,7 @@ else
         fname=`echo $i | grep -o ".*\\."`
         if [ -e "$fname""ex" ]; then
           ./optimiser.py --input $i --output .test.out -u
-          diffcount=`sdiff -sb $i $fname"ex" | wc -L`
+          diffcount=`sdiff -sb $fname"ex" .test.out | wc -L`
 
           if [ $diffcount -eq 0 ] ; then
             echo "Passed: $fname""ir"
